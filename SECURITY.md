@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability in RoadWatch, please **do not open a public GitHub issue**.
 
-Instead, email the team at: **[your-email@example.com]**
+Instead, email the team at: **[prabaljaiswal69420@gmail.com]**
 
 Please include:
 - A description of the vulnerability
