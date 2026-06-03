@@ -1,6 +1,6 @@
 <div align="center">
 
-![RoadWatch Banner](docs/screenshots/banner.jpg)
+![RoadWatch Banner](docs/screenshots/banner.png)
 
 # 🚧 RoadWatch
 
