@@ -1,0 +1,11 @@
+# RoadWatch ML Service - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+ultralytics>=8.0.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9    # required for FastAPI file uploads
+opencv-python>=4.9.0
+numpy>=1.24.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0

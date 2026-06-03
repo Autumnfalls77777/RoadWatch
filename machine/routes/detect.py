@@ -1,0 +1,138 @@
+"""
+RoadWatch ML Service - Detection Routes
+Handles POST /detect-image and POST /detect-video
+"""
+from __future__ import annotations
+import logging
+import os
+from pathlib import Path
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
+
+from config import MODEL_PATH  # noqa: F401  (kept for future version logging)
+from services.detector_service import get_detector
+from schemas import ImageAnalysisResponse, VideoAnalysisResponse, ErrorResponse
+from video_processor import process_video
+from utils.file_utils import (
+    validate_image_file,
+    validate_video_file,
+    save_upload_to_temp,
+)
+import os
+
+router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# ─── Upload size limits ────────────────────────────────────────────────────────────
+MAX_IMAGE_BYTES = int(os.getenv("MAX_IMAGE_BYTES", str(10 * 1024 * 1024)))   # 10 MB
+MAX_VIDEO_BYTES = int(os.getenv("MAX_VIDEO_BYTES", str(100 * 1024 * 1024)))  # 100 MB
+
+ENV = os.getenv("APP_ENV", "development")
+IS_PROD = ENV == "production"
+
+
+# ─── POST /detect-image ───────────────────────────────────────────────────────
+
+@router.post(
+    "/detect-image",
+    response_model=ImageAnalysisResponse,
+    summary="Analyse a road image for potholes",
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
+async def detect_image(file: UploadFile = File(..., description="Road image (JPEG/PNG/WEBP)")):
+    """
+    Upload a road image and receive a full road-health analysis including:
+    - Pothole count & individual detection details
+    - Severity classification per detection (LOW / MEDIUM / HIGH / CRITICAL)
+    - Overall road health score (0-100)
+    - Risk score (0-100)
+    """
+    logger.info("POST /detect-image  filename=%s  content_type=%s", file.filename, file.content_type)
+
+    # ─ Validate file type ────────────────────────────────────────────────────────────────
+    try:
+        validate_image_file(file.filename or "", file.content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    # ─ Read & enforce size limit ───────────────────────────────────────────────────
+    raw = await file.read(MAX_IMAGE_BYTES + 1)
+    if len(raw) > MAX_IMAGE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Image exceeds maximum allowed size of {MAX_IMAGE_BYTES // (1024*1024)} MB.",
+        )
+
+    suffix = Path(file.filename or "image.jpg").suffix or ".jpg"
+    tmp_path = save_upload_to_temp(raw, suffix)
+
+    try:
+        detector = get_detector()
+        analysis = detector.analyse_image(str(tmp_path))
+    except Exception as exc:
+        logger.error("Detection failed: %s", exc, exc_info=True)
+        detail = str(exc) if not IS_PROD else "Detection failed. Please try again."
+        raise HTTPException(status_code=500, detail=detail)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+    logger.info(
+        "Image result: potholes=%d  health=%d  risk=%d",
+        analysis.pothole_count, analysis.road_health, analysis.risk_score,
+    )
+    return ImageAnalysisResponse(success=True, analysis=analysis)
+
+
+# ─── POST /detect-video ───────────────────────────────────────────────────────
+
+@router.post(
+    "/detect-video",
+    response_model=VideoAnalysisResponse,
+    summary="Analyse a road video for potholes",
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
+async def detect_video(file: UploadFile = File(..., description="Road video (MP4/AVI/MOV)")):
+    """
+    Upload a road video and receive aggregated road-health analysis across
+    sampled frames:
+    - Total potholes detected
+    - Average confidence
+    - Dominant severity
+    - Road health & risk scores
+    """
+    logger.info("POST /detect-video  filename=%s  content_type=%s", file.filename, file.content_type)
+
+    # ─ Validate file type ────────────────────────────────────────────────────────────────
+    try:
+        validate_video_file(file.filename or "", file.content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    # ─ Read & enforce size limit ───────────────────────────────────────────────────
+    raw = await file.read(MAX_VIDEO_BYTES + 1)
+    if len(raw) > MAX_VIDEO_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Video exceeds maximum allowed size of {MAX_VIDEO_BYTES // (1024*1024)} MB.",
+        )
+
+    suffix = Path(file.filename or "video.mp4").suffix or ".mp4"
+    tmp_path = save_upload_to_temp(raw, suffix)
+
+    try:
+        detector = get_detector()
+        result   = process_video(str(tmp_path), detector)
+    except Exception as exc:
+        logger.error("Video processing failed: %s", exc, exc_info=True)
+        detail = str(exc) if not IS_PROD else "Video processing failed. Please try again."
+        raise HTTPException(status_code=500, detail=detail)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+    logger.info(
+        "Video result: frames=%d  potholes=%d  health=%d  risk=%d",
+        result.frames_processed, result.total_potholes_detected,
+        result.road_health, result.risk_score,
+    )
+    return VideoAnalysisResponse(success=True, analysis=result)

@@ -1,0 +1,192 @@
+# ==============================================================================
+#  RoadWatch – Root .gitignore
+#  Covers: Node/Vite frontend, Node backend, Python/FastAPI ML service, database
+# ==============================================================================
+
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example          # keep the template so others know what vars are needed
+*.local
+
+
+# ── Large / Binary Archives ───────────────────────────────────────────────────
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  NODE / FRONTEND (Vite + React)
+# ══════════════════════════════════════════════════════════════════════════════
+
+node_modules/
+dist/
+dist-ssr/
+.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  BACKEND (Node / Express)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Large seeded / exported data dumps
+backend/data/
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MACHINE-LEARNING SERVICE (Python / FastAPI / YOLOv8)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+
+# Virtual environment
+machine/venv/
+venv/
+.venv/
+env/
+.env/
+
+# Trained model weights (large binary files – distribute via releases / LFS)
+machine/outputs/
+machine/testing/outputs/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.h5
+
+# YOLO training runs & results
+machine/runs/
+machine/testing/runs/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Testing sample images / personal photos
+machine/testing/*.jpeg
+machine/testing/*.jpg
+machine/testing/*.png
+machine/testing/*.mp4
+machine/testing/*.avi
+
+# Dataset images & labels (large; distribute separately or via DVC/LFS)
+machine/datasets/train/
+machine/datasets/valid/
+machine/datasets/test/
+machine/testing/datasets/train/
+machine/testing/datasets/valid/
+machine/testing/datasets/test/
+
+# Python packaging / build artefacts
+build/
+*.egg-info/
+.eggs/
+dist/
+*.whl
+*.egg
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DATABASE
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Raw data exports / backups
+*.sql.bak
+*.dump
+*.pgdump
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DATASET (root-level Excel / CSV data files)
+# ══════════════════════════════════════════════════════════════════════════════
+
+dataset/
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  OS & EDITOR
+# ══════════════════════════════════════════════════════════════════════════════
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# VS Code (keep shared extension recommendations)
+.vscode/*
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+
+# Visual Studio
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vim / Emacs swap files
+*.swp
+*.swo
+*~
+
+
+# Coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Cache
+.cache/
+
+# Uploads
+uploads/
+public/uploads/
+
+# Secrets
+secrets/
+credentials/
+service-account*.json
+
+# ML
+*.ckpt
+*.pickle
+*.pkl
+
+# Docker
+docker-compose.override.yml

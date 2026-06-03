@@ -1,0 +1,10 @@
+{
+  "name": "RoadWatch",
+  "short_name": "RoadWatch",
+  "description": "Road governance, complaint routing, AI verification, and accountability platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f766e",
+  "icons": []
+}

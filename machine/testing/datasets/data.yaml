@@ -1,0 +1,6 @@
+train: /content/dataset/train/images
+val: /content/dataset/valid/images
+test: /content/dataset/test/images
+
+nc: 2
+names: ['pothole', 'crack']
